@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Uploads
+backend/uploads/
+
+# ChromaDB
+backend/chroma_db/
+
+# Node
+frontend/node_modules/
+
+# Env
+.env
+frontend/.env
+
+# Docker
+*.log
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

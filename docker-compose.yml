@@ -1,0 +1,22 @@
+services:
+
+  backend:
+    build: ./backend
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      - GROQ_API_KESY=GROQ_API_KEY
+
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  frontend:
+    build: ./frontend
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - backend
