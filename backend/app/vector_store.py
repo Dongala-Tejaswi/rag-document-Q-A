@@ -2,24 +2,19 @@ import chromadb
 
 client = chromadb.PersistentClient(path="./chroma_db")
 
-collection = client.get_or_create_collection(
-    name="documents"
-)
+collection = client.get_or_create_collection(name="documents")
 
-def store_embeddings(chunks, embeddings):
-
-    ids = [str(i) for i in range(len(chunks))]
+def store_embeddings(texts):
+    ids = [str(i) for i in range(len(texts))]
 
     collection.add(
-        documents=chunks,
-        embeddings=embeddings,
+        documents=texts,
         ids=ids
     )
 
-def search(query_embedding):
-
+def search_embeddings(query):
     results = collection.query(
-        query_embeddings=[query_embedding],
+        query_texts=[query],
         n_results=3
     )
 
