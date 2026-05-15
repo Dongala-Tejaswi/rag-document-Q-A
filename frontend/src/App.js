@@ -7,6 +7,7 @@ function App() {
   const [answer, setAnswer] = useState("");
 
   const askQuestion = async () => {
+
     try {
 
       const response = await API.get(
@@ -16,26 +17,66 @@ function App() {
       setAnswer(response.data.answer);
 
     } catch (error) {
+
       console.error(error);
-      alert("Failed to fetch answer");
+      setAnswer("Failed to fetch answer");
     }
   };
 
   return (
-    <div>
+
+    <div style={{
+      backgroundColor: "#0b1120",
+      minHeight: "100vh",
+      color: "white",
+      padding: "40px",
+      fontFamily: "Arial"
+    }}>
+
+      <h1>AI Document Q&A System</h1>
+
+      <h2>Ask Question</h2>
+
       <input
         type="text"
+        placeholder="Enter your question"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        placeholder="Ask Question"
+        style={{
+          padding: "12px",
+          width: "400px",
+          borderRadius: "5px",
+          border: "none"
+        }}
       />
 
-      <button onClick={askQuestion}>
+      <br /><br />
+
+      <button
+        onClick={askQuestion}
+        style={{
+          padding: "10px 20px",
+          backgroundColor: "#00bfff",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer"
+        }}
+      >
         Ask
       </button>
 
-      <h3>Answer:</h3>
-      <p>{answer}</p>
+      <h2 style={{ marginTop: "30px" }}>Answer:</h2>
+
+      <div style={{
+        backgroundColor: "#1e293b",
+        padding: "20px",
+        borderRadius: "8px",
+        width: "600px"
+      }}>
+        {answer}
+      </div>
+
     </div>
   );
 }
