@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-import os
 import shutil
+import os
 
 from app.rag_pipeline import process_pdf, ask_question
 
@@ -18,39 +18,44 @@ app.add_middleware(
 
 UPLOAD_FOLDER = "uploads"
 
-# create uploads folder automatically
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 @app.get("/")
 def home():
-    return {"message": "RAG Backend Running"}
+    return {"message": "RAG System Running"}
 
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
     try:
-        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file_path = f"{UPLOAD_FOLDER}/{file.filename}"
 
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        process_pdf(file_path)
+        result = process_pdf(file_path)
 
         return {
-            "message": "PDF uploaded successfully",
-            "filename": file.filename
+            "message": result
         }
 
     except Exception as e:
-        return {"error": str(e)}
+        return {
+            "error": str(e)
+        }
 
 
 @app.get("/ask")
-def ask(query: str):
+def ask(question: str):
     try:
-        answer = ask_question(query)
-        return {"answer": answer}
+        answer = ask_question(question)
+
+        return {
+            "answer": answer
+        }
 
     except Exception as e:
-        return {"error": str(e)}
+        return {
+            "error": str(e)
+        }

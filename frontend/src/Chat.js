@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import API from "./api";
 
 function Chat() {
@@ -6,20 +6,13 @@ function Chat() {
   const [answer, setAnswer] = useState("");
 
   const askQuestion = async () => {
-    if (!question) {
-      alert("Enter question");
-      return;
-    }
-
     try {
-      const response = await API.get(
-        `/ask?query=${encodeURIComponent(question)}`
-      );
+      const response = await API.get(`/ask?question=${question}`);
 
       setAnswer(response.data.answer);
     } catch (error) {
-      console.error(error);
       alert("Failed to fetch answer");
+      console.log(error);
     }
   };
 
@@ -38,10 +31,9 @@ function Chat() {
         Ask
       </button>
 
-      <div className="answer-box">
-        <h3>Answer:</h3>
-        <p>{answer}</p>
-      </div>
+      <h3>Answer:</h3>
+
+      <p>{answer}</p>
     </div>
   );
 }

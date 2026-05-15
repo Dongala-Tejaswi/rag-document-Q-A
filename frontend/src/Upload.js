@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import API from "./api";
 
 function Upload() {
@@ -6,11 +6,12 @@ function Upload() {
 
   const uploadFile = async () => {
     if (!file) {
-      alert("Please select PDF");
+      alert("Select a PDF first");
       return;
     }
 
     const formData = new FormData();
+
     formData.append("file", file);
 
     try {
@@ -20,18 +21,17 @@ function Upload() {
         },
       });
 
-      alert("PDF uploaded successfully");
+      alert("Upload successful");
     } catch (error) {
-      console.error(error);
       alert("Upload failed");
+      console.log(error);
     }
   };
 
   return (
-    <div className="upload-box">
+    <div>
       <input
         type="file"
-        accept=".pdf"
         onChange={(e) => setFile(e.target.files[0])}
       />
 
