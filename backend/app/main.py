@@ -19,27 +19,53 @@ UPLOAD_FOLDER = "documents"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
 @app.get("/")
 def home():
     return {"message": "RAG System Running"}
 
+
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    file_path = f"{UPLOAD_FOLDER}/{file.filename}"
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        file_path = f"{UPLOAD_FOLDER}/{file.filename}"
 
-    process_pdf(file_path)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-    return {
-        "message": "PDF uploaded successfully"
-    }
+        print("PDF Saved")
+
+        process_pdf(file_path)
+
+        print("PDF Processed")
+
+        return {
+            "message": "PDF uploaded successfully"
+        }
+
+    except Exception as e:
+        print("UPLOAD ERROR:", str(e))
+        return {"error": str(e)}
+
 
 @app.get("/ask")
 def ask(query: str):
-    answer = ask_question(query)
 
-    return {
-        "answer": answer
-    }
+    try:
+        print("Question:", query)
+
+        answer = ask_question(query)
+
+        print("Generated Answer:", answer)
+
+        return {
+            "answer": answer
+        }
+
+    except Exception as e:
+        print("ASK ERROR:", str(e))
+
+        return {
+            "error": str(e)
+        }
