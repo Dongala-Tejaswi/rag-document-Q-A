@@ -1,29 +1,30 @@
 import chromadb
-from chromadb.config import Settings
 
-# Create ChromaDB client
-client = chromadb.PersistentClient(path="./chroma_db")
+client = chromadb.Client()
 
-# Collection
-collection = client.get_or_create_collection(name="documents")
-
-
-# Store embeddings into vector DB
-def store_embeddings(texts, embeddings):
-    ids = [str(i) for i in range(len(texts))]
-
-    collection.add(
-        documents=texts,
-        embeddings=embeddings,
-        ids=ids
-    )
+collection = client.get_or_create_collection(
+    name="documents"
+)
 
 
-# Search similar chunks
-def search(query_embedding, top_k=3):
+def store_embeddings(chunks, embeddings):
+
+    for i, chunk in enumerate(chunks):
+
+        collection.add(
+            ids=[str(i)],
+            documents=[chunk],
+            embeddings=[embeddings[i]]
+        )
+
+
+def search(query_embedding):
+
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=top_k
+        n_results=2
     )
 
-    return results["documents"][0]
+    documents = results["documents"][0]
+
+    return " ".join(documents)

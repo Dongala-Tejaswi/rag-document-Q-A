@@ -1,30 +1,30 @@
+import os
 from groq import Groq
-from app.config import GROQ_API_KEY
 
-client = Groq(api_key=GROQ_API_KEY)
+client = Groq(
+    api_key=os.getenv("GROQ_API_KEY")
+)
 
 def generate_answer(context, query):
 
     prompt = f"""
-    Answer the question only using the context.
+    Answer the question based on the context.
 
-    CONTEXT:
+    Context:
     {context}
 
-    QUESTION:
+    Question:
     {query}
     """
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-
+        model="llama-3.1-8b-instant",
         messages=[
             {
                 "role": "user",
                 "content": prompt
             }
         ],
-
         temperature=0.3
     )
 

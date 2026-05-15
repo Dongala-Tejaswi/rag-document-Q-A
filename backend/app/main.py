@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 
+from app.rag_pipeline import process_pdf, ask_question
+
 app = FastAPI()
 
 app.add_middleware(
@@ -28,7 +30,16 @@ async def upload_pdf(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    process_pdf(file_path)
+
     return {
-        "message": "PDF uploaded successfully",
-        "filename": file.filename
+        "message": "PDF uploaded successfully"
+    }
+
+@app.get("/ask")
+def ask(query: str):
+    answer = ask_question(query)
+
+    return {
+        "answer": answer
     }
