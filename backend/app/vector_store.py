@@ -1,28 +1,30 @@
-import chromadb
+from sklearn.metrics.pairwise import cosine_similarity
+from app.embedding import create_embedding
+import numpy as np
 
-client = chromadb.Client()
-
-collection = client.get_or_create_collection(
-    name="rag_collection"
-)
+stored_chunks = []
+stored_embeddings = []
 
 
 def store_embeddings(chunks, embeddings):
+    global stored_chunks, stored_embeddings
 
-    ids = [str(i) for i in range(len(chunks))]
-
-    collection.add(
-        embeddings=embeddings,
-        documents=chunks,
-        ids=ids
-    )
+    stored_chunks = chunks
+    stored_embeddings = embeddings
 
 
-def search(query_embedding):
+def search_embeddings(query, top_k=3):
+    global stored_chunks, stored_embeddings
 
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=3
-    )
+    query_embedding = create_embedding([query])
 
-    return results["documents"][0]
+    similarities = cosine_similarity(
+        query_embedding,
+        stored_embeddings
+    )[0]
+
+    top_indices = np.argsort(similarities)[-top_k:][::-1]
+
+    results = [stored_chunks[i] for i in top_indices]
+
+    return results

@@ -6,32 +6,31 @@ client = Groq(
 )
 
 
-def generate_answer(context, query):
+def generate_answer(context, question):
 
     prompt = f"""
-You are a helpful AI Resume Assistant.
+You are a resume assistant.
 
 Answer ONLY from the provided context.
 
-If answer is not in context, say:
-"I could not find the answer in the document."
+If the answer exists in the context, return it clearly.
 
 Context:
 {context}
 
 Question:
-{query}
+{question}
 """
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="llama3-8b-8192",
         messages=[
             {
                 "role": "user",
                 "content": prompt
             }
         ],
-        temperature=0.2
+        temperature=0.1
     )
 
     return response.choices[0].message.content
