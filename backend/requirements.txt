@@ -1,8 +1,9 @@
 fastapi
 uvicorn
 python-multipart
-pymupdf
-chromadb
-groq
-requests
+sentence-transformers
 scikit-learn
+numpy
+pymupdf
+torch
+transformers
