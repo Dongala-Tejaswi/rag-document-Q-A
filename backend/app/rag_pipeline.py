@@ -3,7 +3,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 chunks = []
-vectorizer = TfidfVectorizer(stop_words='english')
+vectorizer = TfidfVectorizer(stop_words="english")
 vectors = None
 
 
@@ -17,7 +17,7 @@ def process_pdf(file_path):
     for page in pdf:
         text += page.get_text()
 
-    # Better chunking
+    # Split text into paragraph chunks
     raw_chunks = text.split("\n\n")
 
     chunks = []
@@ -29,7 +29,7 @@ def process_pdf(file_path):
             chunks.append(chunk)
 
     if len(chunks) == 0:
-        return "No text extracted"
+        return "No text extracted from PDF"
 
     vectors = vectorizer.fit_transform(chunks)
 
