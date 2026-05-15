@@ -1,21 +1,27 @@
-import os
 from groq import Groq
+import os
 
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
+
 def generate_answer(context, query):
 
     prompt = f"""
-    Answer the question based on the context.
+You are a helpful AI Resume Assistant.
 
-    Context:
-    {context}
+Answer ONLY from the provided context.
 
-    Question:
-    {query}
-    """
+If answer is not in context, say:
+"I could not find the answer in the document."
+
+Context:
+{context}
+
+Question:
+{query}
+"""
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
@@ -25,7 +31,7 @@ def generate_answer(context, query):
                 "content": prompt
             }
         ],
-        temperature=0.3
+        temperature=0.2
     )
 
     return response.choices[0].message.content

@@ -3,38 +3,26 @@ import chromadb
 client = chromadb.Client()
 
 collection = client.get_or_create_collection(
-    name="documents"
+    name="rag_collection"
 )
-
-doc_count = 0
 
 
 def store_embeddings(chunks, embeddings):
 
-    global doc_count
+    ids = [str(i) for i in range(len(chunks))]
 
-    for i, chunk in enumerate(chunks):
-
-        collection.add(
-            ids=[str(doc_count)],
-            documents=[chunk],
-            embeddings=[embeddings[i]]
-        )
-
-        doc_count += 1
-
-    print("Stored embeddings:", doc_count)
+    collection.add(
+        embeddings=embeddings,
+        documents=chunks,
+        ids=ids
+    )
 
 
 def search(query_embedding):
 
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=2
+        n_results=3
     )
 
-    print(results)
-
-    documents = results["documents"][0]
-
-    return " ".join(documents)
+    return results["documents"][0]
