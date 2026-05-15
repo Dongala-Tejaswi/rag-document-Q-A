@@ -4,15 +4,10 @@ import numpy as np
 
 stored_chunks = []
 stored_embeddings = []
-
-
 def store_embeddings(chunks, embeddings):
     global stored_chunks, stored_embeddings
-
     stored_chunks = chunks
     stored_embeddings = embeddings
-
-
 def search_embeddings(query, top_k=3):
     global stored_chunks, stored_embeddings
 
