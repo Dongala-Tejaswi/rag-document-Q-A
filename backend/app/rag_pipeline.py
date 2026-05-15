@@ -1,49 +1,57 @@
 import fitz
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
-from app.embedding import create_embedding
-from app.vector_store import (
-    store_embeddings,
-    search_embeddings
-)
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
-stored_chunks = []
-
-
+documents = []
+embeddings = []
 def process_pdf(file_path):
+    global documents, embeddings
 
-    global stored_chunks
+    documents = []
+    embeddings = []
 
-    doc = fitz.open(file_path)
+    pdf = fitz.open(file_path)
 
-    text = ""
+    full_text = ""
 
-    for page in doc:
-        text += page.get_text()
+    for page in pdf:
+        full_text += page.get_text()
 
-    chunks = text.split("\n")
+    pdf.close()
 
-    chunks = [
-        chunk.strip()
-        for chunk in chunks
-        if len(chunk.strip()) > 20
-    ]
+    # Split into chunks
+    chunks = full_text.split("\n")
 
-    stored_chunks = chunks
+    for chunk in chunks:
+        chunk = chunk.strip()
 
-    embeddings = create_embedding(chunks)
+        if len(chunk) > 20:
+            documents.append(chunk)
 
-    store_embeddings(chunks, embeddings)
+            embedding = model.encode(chunk).tolist()
 
-    return "PDF processed successfully"
+            embeddings.append(embedding)
+
+    return {"message": "PDF processed successfully"}
 
 
-def ask_question(question):
+def ask_question(query):
+    global documents, embeddings
 
-    query_embedding = create_embedding([question])[0]
+    if len(documents) == 0 or len(embeddings) == 0:
+        return "No PDF uploaded or processed."
 
-    results = search_embeddings(query_embedding)
+    query_embedding = model.encode(query).reshape(1, -1)
 
-    if not results:
-        return "No relevant answer found."
+    embeddings_array = np.array(embeddings)
 
-    return "\n".join(results)
+    similarities = cosine_similarity(query_embedding, embeddings_array)
+
+    best_match_index = similarities.argmax()
+
+    answer = documents[best_match_index]
+
+    return answer

@@ -18,7 +18,8 @@ app.add_middleware(
 
 UPLOAD_FOLDER = "uploads"
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 
 @app.get("/")
@@ -28,34 +29,18 @@ def home():
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    try:
-        file_path = f"{UPLOAD_FOLDER}/{file.filename}"
+    file_path = f"{UPLOAD_FOLDER}/{file.filename}"
 
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
 
-        result = process_pdf(file_path)
+    result = process_pdf(file_path)
 
-        return {
-            "message": result
-        }
-
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
+    return result
 
 
 @app.get("/ask")
-def ask(question: str):
-    try:
-        answer = ask_question(question)
+def ask(query: str):
+    answer = ask_question(query)
 
-        return {
-            "answer": answer
-        }
-
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
+    return {"answer": answer}
