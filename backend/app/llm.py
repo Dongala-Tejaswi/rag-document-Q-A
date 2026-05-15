@@ -32,5 +32,4 @@ Question:
         ],
         temperature=0.1
     )
-
     return response.choices[0].message.content

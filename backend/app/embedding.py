@@ -1,3 +1,4 @@
+from app.embedding import create_embedding
 from sklearn.feature_extraction.text import TfidfVectorizer
 vectorizer = TfidfVectorizer()
 stored_vectors = None
