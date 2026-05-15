@@ -1,38 +1,36 @@
-from app.pdf_utils import extract_text
+import fitz
 from app.embedding import create_embedding
 from app.vector_store import store_embeddings, search_embeddings
-from app.llm import generate_answer
 
-all_chunks = []
+document_chunks = []
 
-def split_text(text, chunk_size=300):
-    words = text.split()
-    chunks = []
+def process_pdf(file_path):
+    global document_chunks
 
-    for i in range(0, len(words), chunk_size):
-        chunk = " ".join(words[i:i + chunk_size])
-        chunks.append(chunk)
+    doc = fitz.open(file_path)
 
-    return chunks
+    text = ""
 
+    for page in doc:
+        text += page.get_text()
 
-def process_pdf(pdf_path):
-    global all_chunks
+    chunks = text.split("\n")
 
-    text = extract_text(pdf_path)
+    chunks = [chunk.strip() for chunk in chunks if len(chunk.strip()) > 20]
 
-    chunks = split_text(text)
+    document_chunks = chunks
 
     embeddings = create_embedding(chunks)
 
     store_embeddings(chunks, embeddings)
 
-    all_chunks.extend(chunks)
-
     return "PDF processed successfully"
 
-def ask_question(query):
-    results = search_embeddings(query)
-    context = "\n".join(results)
-    answer = generate_answer(context, query)
-    return answer
+
+def ask_question(question):
+    results = search_embeddings(question)
+
+    if not results:
+        return "No relevant answer found."
+
+    return "\n".join(results[:5])
