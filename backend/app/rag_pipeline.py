@@ -2,13 +2,13 @@ import fitz
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-documents = []
-vectorizer = TfidfVectorizer()
+chunks = []
+vectorizer = TfidfVectorizer(stop_words='english')
 vectors = None
 
 
 def process_pdf(file_path):
-    global documents, vectors
+    global chunks, vectors
 
     text = ""
 
@@ -17,28 +17,37 @@ def process_pdf(file_path):
     for page in pdf:
         text += page.get_text()
 
-    documents = text.split("\n")
+    # Better chunking
+    raw_chunks = text.split("\n\n")
 
-    documents = [d.strip() for d in documents if d.strip()]
+    chunks = []
 
-    if len(documents) == 0:
-        return "No text found in PDF"
+    for chunk in raw_chunks:
+        chunk = chunk.strip()
 
-    vectors = vectorizer.fit_transform(documents)
+        if len(chunk) > 30:
+            chunks.append(chunk)
+
+    if len(chunks) == 0:
+        return "No text extracted"
+
+    vectors = vectorizer.fit_transform(chunks)
 
     return "PDF uploaded successfully"
 
 
 def ask_question(query):
-    global documents, vectors
+    global chunks, vectors
 
     if vectors is None:
         return "Please upload PDF first"
 
     query_vector = vectorizer.transform([query])
 
-    similarity = cosine_similarity(query_vector, vectors)
+    similarities = cosine_similarity(query_vector, vectors)
 
-    index = similarity.argmax()
+    best_index = similarities.argmax()
 
-    return documents[index]
+    answer = chunks[best_index]
+
+    return answer
