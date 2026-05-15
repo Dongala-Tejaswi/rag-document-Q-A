@@ -7,7 +7,6 @@ from app.rag_pipeline import process_pdf, ask_question
 
 app = FastAPI()
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,13 +17,12 @@ app.add_middleware(
 
 UPLOAD_FOLDER = "uploads"
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 @app.get("/")
 def home():
-    return {"message": "RAG System Running"}
+    return {"message": "RAG API Running"}
 
 
 @app.post("/upload")
@@ -36,7 +34,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     result = process_pdf(file_path)
 
-    return result
+    return {"message": result}
 
 
 @app.get("/ask")

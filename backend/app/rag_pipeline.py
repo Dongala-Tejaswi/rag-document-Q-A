@@ -1,57 +1,45 @@
 import fitz
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
-
-model = SentenceTransformer("all-MiniLM-L6-v2")
 
 documents = []
-embeddings = []
+vectorizer = TfidfVectorizer()
+
+vectors = None
+
+
 def process_pdf(file_path):
-    global documents, embeddings
+    global documents, vectors
 
-    documents = []
-    embeddings = []
+    doc = fitz.open(file_path)
 
-    pdf = fitz.open(file_path)
+    text = ""
 
-    full_text = ""
-
-    for page in pdf:
-        full_text += page.get_text()
-
-    pdf.close()
+    for page in doc:
+        text += page.get_text()
 
     # Split into chunks
-    chunks = full_text.split("\n")
+    documents = text.split("\n")
 
-    for chunk in chunks:
-        chunk = chunk.strip()
+    # Remove empty lines
+    documents = [doc.strip() for doc in documents if doc.strip()]
 
-        if len(chunk) > 20:
-            documents.append(chunk)
+    if len(documents) > 0:
+        vectors = vectorizer.fit_transform(documents)
 
-            embedding = model.encode(chunk).tolist()
-
-            embeddings.append(embedding)
-
-    return {"message": "PDF processed successfully"}
+    return "PDF processed successfully"
 
 
 def ask_question(query):
-    global documents, embeddings
+    global documents, vectors
 
-    if len(documents) == 0 or len(embeddings) == 0:
-        return "No PDF uploaded or processed."
+    if vectors is None or len(documents) == 0:
+        return "No PDF uploaded yet."
 
-    query_embedding = model.encode(query).reshape(1, -1)
+    query_vector = vectorizer.transform([query])
 
-    embeddings_array = np.array(embeddings)
+    similarity = cosine_similarity(query_vector, vectors)
 
-    similarities = cosine_similarity(query_embedding, embeddings_array)
+    index = similarity.argmax()
 
-    best_match_index = similarities.argmax()
-
-    answer = documents[best_match_index]
-
-    return answer
+    return documents[index]
