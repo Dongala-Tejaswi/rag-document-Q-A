@@ -4,37 +4,36 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 documents = []
 vectorizer = TfidfVectorizer()
-
 vectors = None
 
 
 def process_pdf(file_path):
     global documents, vectors
 
-    doc = fitz.open(file_path)
-
     text = ""
 
-    for page in doc:
+    pdf = fitz.open(file_path)
+
+    for page in pdf:
         text += page.get_text()
 
-    # Split into chunks
     documents = text.split("\n")
 
-    # Remove empty lines
-    documents = [doc.strip() for doc in documents if doc.strip()]
+    documents = [d.strip() for d in documents if d.strip()]
 
-    if len(documents) > 0:
-        vectors = vectorizer.fit_transform(documents)
+    if len(documents) == 0:
+        return "No text found in PDF"
 
-    return "PDF processed successfully"
+    vectors = vectorizer.fit_transform(documents)
+
+    return "PDF uploaded successfully"
 
 
 def ask_question(query):
     global documents, vectors
 
-    if vectors is None or len(documents) == 0:
-        return "No PDF uploaded yet."
+    if vectors is None:
+        return "Please upload PDF first"
 
     query_vector = vectorizer.transform([query])
 

@@ -15,24 +15,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_FOLDER = "uploads"
+UPLOAD_DIR = "uploads"
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @app.get("/")
 def home():
-    return {"message": "RAG API Running"}
+    return {"message": "Backend Running"}
 
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    file_path = f"{UPLOAD_FOLDER}/{file.filename}"
+    path = f"{UPLOAD_DIR}/{file.filename}"
 
-    with open(file_path, "wb") as buffer:
+    with open(path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    result = process_pdf(file_path)
+    result = process_pdf(path)
 
     return {"message": result}
 
