@@ -1,8 +1,18 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 vectorizer = TfidfVectorizer()
-stored_vectors = None
+
+is_fitted = False
+
+
 def create_embedding(texts):
-    global stored_vectors
-    vectors = vectorizer.fit_transform(texts)
-    stored_vectors = vectors
+
+    global is_fitted
+
+    if not is_fitted:
+        vectors = vectorizer.fit_transform(texts)
+        is_fitted = True
+    else:
+        vectors = vectorizer.transform(texts)
+
     return vectors.toarray()

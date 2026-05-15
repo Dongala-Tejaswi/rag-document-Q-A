@@ -7,12 +7,23 @@ function Chat() {
 
   const askQuestion = async () => {
     try {
-      const response = await API.get(`/ask?question=${question}`);
+
+      const response = await API.get(
+        `/ask?question=${encodeURIComponent(question)}`
+      );
+
+      console.log(response.data);
 
       setAnswer(response.data.answer);
+
     } catch (error) {
-      alert("Failed to fetch answer");
       console.log(error);
+
+      if (error.response) {
+        console.log(error.response.data);
+      }
+
+      alert("Failed to fetch answer");
     }
   };
 
@@ -25,6 +36,11 @@ function Chat() {
         placeholder="Ask question"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "12px",
+          marginBottom: "10px"
+        }}
       />
 
       <button onClick={askQuestion}>

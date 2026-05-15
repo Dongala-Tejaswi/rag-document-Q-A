@@ -1,11 +1,17 @@
 import fitz
-from app.embedding import create_embedding
-from app.vector_store import store_embeddings, search_embeddings
 
-document_chunks = []
+from app.embedding import create_embedding
+from app.vector_store import (
+    store_embeddings,
+    search_embeddings
+)
+
+stored_chunks = []
+
 
 def process_pdf(file_path):
-    global document_chunks
+
+    global stored_chunks
 
     doc = fitz.open(file_path)
 
@@ -16,9 +22,13 @@ def process_pdf(file_path):
 
     chunks = text.split("\n")
 
-    chunks = [chunk.strip() for chunk in chunks if len(chunk.strip()) > 20]
+    chunks = [
+        chunk.strip()
+        for chunk in chunks
+        if len(chunk.strip()) > 20
+    ]
 
-    document_chunks = chunks
+    stored_chunks = chunks
 
     embeddings = create_embedding(chunks)
 
@@ -28,9 +38,12 @@ def process_pdf(file_path):
 
 
 def ask_question(question):
-    results = search_embeddings(question)
+
+    query_embedding = create_embedding([question])[0]
+
+    results = search_embeddings(query_embedding)
 
     if not results:
         return "No relevant answer found."
 
-    return "\n".join(results[:5])
+    return "\n".join(results)
