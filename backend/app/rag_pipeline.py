@@ -1,26 +1,35 @@
 import fitz
 import re
+import numpy as np
 
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+# -----------------------------
+# GLOBAL STORAGE
+# -----------------------------
+
 chunks = []
+embeddings = None
 
-vectorizer = TfidfVectorizer(
-    stop_words="english",
-    ngram_range=(1, 3),
-    max_features=5000
-)
+# Lightweight accurate model
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
-vectors = None
 
+# -----------------------------
+# CLEAN TEXT
+# -----------------------------
 
 def clean_text(text):
 
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"\s+", " ", text)
 
     return text.strip()
 
+
+# -----------------------------
+# SMART CHUNKING
+# -----------------------------
 
 def create_chunks(text, chunk_size=700):
 
@@ -48,9 +57,16 @@ def create_chunks(text, chunk_size=700):
     return smart_chunks
 
 
+# -----------------------------
+# PROCESS PDF
+# -----------------------------
+
 def process_pdf(file_path):
 
-    global chunks, vectors
+    global chunks, embeddings
+
+    chunks = []
+    embeddings = None
 
     pdf = fitz.open(file_path)
 
@@ -67,37 +83,82 @@ def process_pdf(file_path):
     if len(full_text) < 20:
         return "No readable text found"
 
+    # Create smart chunks
     chunks = create_chunks(full_text)
 
-    chunks = [chunk for chunk in chunks if len(chunk) > 50]
+    chunks = [c for c in chunks if len(c) > 50]
 
     if len(chunks) == 0:
-        return "No valid text chunks found"
+        return "No valid chunks generated"
 
-    vectors = vectorizer.fit_transform(chunks)
+    # Generate embeddings
+    embeddings = model.encode(chunks)
 
-    return "PDF uploaded successfully"
+    return f"PDF uploaded successfully. Total chunks: {len(chunks)}"
 
+
+# -----------------------------
+# ASK QUESTION
+# -----------------------------
 
 def ask_question(query):
 
-    global chunks, vectors
+    global chunks, embeddings
 
-    if vectors is None:
+    if embeddings is None or len(chunks) == 0:
         return "Please upload PDF first"
 
-    query_vector = vectorizer.transform([query])
+    # Encode question
+    query_embedding = model.encode([query])
 
+    # Similarity search
     similarities = cosine_similarity(
-        query_vector,
-        vectors
+        query_embedding,
+        embeddings
     )[0]
 
-    best_index = similarities.argmax()
+    # Get top 5 chunks
+    top_indices = similarities.argsort()[-5:][::-1]
 
-    best_score = similarities[best_index]
+    best_results = []
 
-    if best_score < 0.08:
+    query_words = query.lower().split()
+
+    for idx in top_indices:
+
+        chunk = chunks[idx]
+
+        score = similarities[idx]
+
+        # Keyword boosting
+        keyword_matches = 0
+
+        for word in query_words:
+
+            if word in chunk.lower():
+                keyword_matches += 1
+
+        final_score = score + (keyword_matches * 0.08)
+
+        best_results.append(
+            (final_score, chunk)
+        )
+
+    # Sort final results
+    best_results = sorted(
+        best_results,
+        reverse=True
+    )
+
+    # Return top answers
+    final_answers = []
+
+    for score, chunk in best_results[:3]:
+
+        if score > 0.20:
+            final_answers.append(chunk)
+
+    if len(final_answers) == 0:
         return "Answer not found in document"
 
-    return chunks[best_index]
+    return "\n\n".join(final_answers)
