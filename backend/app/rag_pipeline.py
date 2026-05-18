@@ -1,16 +1,14 @@
 import fitz
 import re
-from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 chunks = []
-vectors = None
+embeddings = None
 
-vectorizer = TfidfVectorizer(
-    stop_words="english",
-    ngram_range=(1, 2),
-    max_features=15000
-)
+# Lightweight accurate model
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 
 def clean_text(text):
@@ -20,7 +18,7 @@ def clean_text(text):
     return text.strip()
 
 
-def chunk_text(text, chunk_size=500):
+def create_chunks(text, chunk_size=500):
 
     sentences = re.split(r'(?<=[.!?])\s+', text)
 
@@ -48,7 +46,7 @@ def chunk_text(text, chunk_size=500):
 
 def process_pdf(file_path):
 
-    global chunks, vectors
+    global chunks, embeddings
 
     pdf = fitz.open(file_path)
 
@@ -63,36 +61,35 @@ def process_pdf(file_path):
     full_text = clean_text(full_text)
 
     if len(full_text) < 20:
-        return "No readable text found in PDF"
+        return "No readable text found"
 
-    # Smart semantic chunks
-    chunks = chunk_text(full_text)
+    chunks = create_chunks(full_text)
 
-    chunks = [chunk for chunk in chunks if len(chunk) > 50]
+    chunks = [chunk for chunk in chunks if len(chunk) > 40]
 
     if len(chunks) == 0:
         return "No valid chunks generated"
 
-    # Create embeddings
-    vectors = vectorizer.fit_transform(chunks)
+    # Generate semantic embeddings
+    embeddings = model.encode(chunks)
 
     return "PDF uploaded successfully"
 
 
 def ask_question(query):
 
-    global chunks, vectors
+    global chunks, embeddings
 
-    if vectors is None or len(chunks) == 0:
+    if embeddings is None:
         return "Please upload PDF first"
 
-    query = clean_text(query)
+    query_embedding = model.encode([query])
 
-    query_vector = vectorizer.transform([query])
+    similarities = cosine_similarity(
+        query_embedding,
+        embeddings
+    )[0]
 
-    similarities = cosine_similarity(query_vector, vectors).flatten()
-
-    # Get top 3 most relevant chunks
     top_indices = similarities.argsort()[-3:][::-1]
 
     results = []
@@ -101,12 +98,10 @@ def ask_question(query):
 
         score = similarities[idx]
 
-        if score > 0.05:
+        if score > 0.25:
             results.append(chunks[idx])
 
     if len(results) == 0:
         return "Answer not found in document"
 
-    final_answer = "\n\n".join(results)
-
-    return final_answer
+    return "\n\n".join(results)
