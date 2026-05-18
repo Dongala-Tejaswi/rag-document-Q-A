@@ -1,14 +1,18 @@
 import fitz
 import re
-import numpy as np
-from sentence_transformers import SentenceTransformer
+
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 chunks = []
-embeddings = None
 
-# Lightweight accurate model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+vectorizer = TfidfVectorizer(
+    stop_words="english",
+    ngram_range=(1, 3),
+    max_features=5000
+)
+
+vectors = None
 
 
 def clean_text(text):
@@ -18,7 +22,7 @@ def clean_text(text):
     return text.strip()
 
 
-def create_chunks(text, chunk_size=500):
+def create_chunks(text, chunk_size=700):
 
     sentences = re.split(r'(?<=[.!?])\s+', text)
 
@@ -46,7 +50,7 @@ def create_chunks(text, chunk_size=500):
 
 def process_pdf(file_path):
 
-    global chunks, embeddings
+    global chunks, vectors
 
     pdf = fitz.open(file_path)
 
@@ -65,43 +69,35 @@ def process_pdf(file_path):
 
     chunks = create_chunks(full_text)
 
-    chunks = [chunk for chunk in chunks if len(chunk) > 40]
+    chunks = [chunk for chunk in chunks if len(chunk) > 50]
 
     if len(chunks) == 0:
-        return "No valid chunks generated"
+        return "No valid text chunks found"
 
-    # Generate semantic embeddings
-    embeddings = model.encode(chunks)
+    vectors = vectorizer.fit_transform(chunks)
 
     return "PDF uploaded successfully"
 
 
 def ask_question(query):
 
-    global chunks, embeddings
+    global chunks, vectors
 
-    if embeddings is None:
+    if vectors is None:
         return "Please upload PDF first"
 
-    query_embedding = model.encode([query])
+    query_vector = vectorizer.transform([query])
 
     similarities = cosine_similarity(
-        query_embedding,
-        embeddings
+        query_vector,
+        vectors
     )[0]
 
-    top_indices = similarities.argsort()[-3:][::-1]
+    best_index = similarities.argmax()
 
-    results = []
+    best_score = similarities[best_index]
 
-    for idx in top_indices:
-
-        score = similarities[idx]
-
-        if score > 0.25:
-            results.append(chunks[idx])
-
-    if len(results) == 0:
+    if best_score < 0.08:
         return "Answer not found in document"
 
-    return "\n\n".join(results)
+    return chunks[best_index]
