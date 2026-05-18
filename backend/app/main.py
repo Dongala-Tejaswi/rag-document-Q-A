@@ -7,6 +7,7 @@ from app.rag_pipeline import process_pdf, ask_question
 
 app = FastAPI()
 
+# CORS FIX
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,9 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "uploads"
+UPLOAD_FOLDER = "uploads"
 
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 @app.get("/")
@@ -27,18 +28,20 @@ def home():
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    path = f"{UPLOAD_DIR}/{file.filename}"
 
-    with open(path, "wb") as buffer:
+    file_path = f"{UPLOAD_FOLDER}/{file.filename}"
+
+    with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    result = process_pdf(path)
+    result = process_pdf(file_path)
 
     return {"message": result}
 
 
 @app.get("/ask")
 def ask(query: str):
+
     answer = ask_question(query)
 
     return {"answer": answer}

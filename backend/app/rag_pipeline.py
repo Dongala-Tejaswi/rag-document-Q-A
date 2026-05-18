@@ -24,10 +24,8 @@ def process_pdf(file_path):
         text = page.get_text("text")
         full_text += text + "\n"
 
-    # Better cleaning
     full_text = full_text.replace("\n", " ")
 
-    # Chunk splitting
     chunk_size = 400
 
     for i in range(0, len(full_text), chunk_size):
