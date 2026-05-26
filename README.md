@@ -18,7 +18,7 @@ The system retrieves relevant document chunks using vector embeddings and genera
 - 🧠 Retrieval-Augmented Generation (RAG)
 - 📊 Scalable backend architecture
 - 🔐 Environment-based configuration
-
+Deployment link https://rag-document-q-a-2.onrender.com/
 ---
 
 # 🏗️ System Architecture
